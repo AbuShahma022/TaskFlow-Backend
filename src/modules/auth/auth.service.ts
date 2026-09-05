@@ -3,8 +3,10 @@ import httpStatus from "http-status";
 
 import { prisma } from "../../lib/prisma";
 import AppError from "../../utils/AppError";
-import type { IRegisterUser } from "./auth.interface";
+import type { ILoginUser, IRegisterUser } from "./auth.interface";
 import config from "../../config";
+import { jwtUtils } from "../../utils/jwt";
+import { SignOptions } from "jsonwebtoken";
 
 
 const register = async (payload: IRegisterUser) => {
@@ -46,6 +48,95 @@ const register = async (payload: IRegisterUser) => {
   return user;
 };
 
+const login = async (payload: ILoginUser) => {
+  // Find user
+  const user = await prisma.user.findUnique({
+    where: {
+      email: payload.email,
+    },
+  });
+
+  // User not found
+  if (!user) {
+    throw new AppError(
+      httpStatus.UNAUTHORIZED,
+      "Invalid email or password",
+    );
+  }
+
+  // Deleted user
+  if (user.deletedAt) {
+    throw new AppError(
+      httpStatus.FORBIDDEN,
+      "This account has been deleted",
+    );
+  }
+
+  // Blocked user
+  if (user.status === "BLOCKED") {
+    throw new AppError(
+      httpStatus.FORBIDDEN,
+      "This account has been blocked",
+    );
+  }
+
+  // Google-only account
+  if (!user.passwordHash) {
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      "This account does not have a password. Please use Google login.",
+    );
+  }
+
+  // Compare password
+  const isPasswordMatched = await bcrypt.compare(
+    payload.password,
+    user.passwordHash,
+  );
+
+  if (!isPasswordMatched) {
+    throw new AppError(
+      httpStatus.UNAUTHORIZED,
+      "Invalid email or password",
+    );
+  }
+
+  // JWT payload
+  const jwtPayload = {
+    userId: user.id,
+    email: user.email,
+    role: user.role,
+  };
+
+  // Access Token
+  const accessToken = jwtUtils.createToken(
+    jwtPayload,
+    config.jwt.accessTokenSecret,
+    config.jwt.accessTokenExpiresIn as SignOptions,
+  );
+
+  // Refresh Token
+  const refreshToken = jwtUtils.createToken(
+    jwtPayload,
+    config.jwt.refreshTokenSecret,
+    config.jwt.refreshTokenExpiresIn as SignOptions,
+  );
+
+  return {
+    accessToken,
+    refreshToken,
+    user: {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      status: user.status,
+      emailVerified: user.emailVerified,
+    },
+  };
+};
+
 export const authService = {
   register,
+  login
 };

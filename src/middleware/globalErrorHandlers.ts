@@ -53,12 +53,12 @@ const globalErrorHandler: ErrorRequestHandler = (err, req, res, next) => {
 		message = err.message;
 	}
 
-	res.status(httpStatus.INTERNAL_SERVER_ERROR).json({
-		success: false,
-		message,
-		errorDetails,
-		stack: config.nodeEnv === "development" ? err.stack : undefined,
-	});
+	res.status(statusCode || httpStatus.INTERNAL_SERVER_ERROR).json({
+  success: false,
+  message,
+  errorDetails,
+  stack: config.nodeEnv === "development" ? err.stack : undefined,
+});
 };
 
 export default globalErrorHandler;

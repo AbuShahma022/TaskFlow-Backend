@@ -6,6 +6,7 @@ import rateLimit from "express-rate-limit";
 import httpStatus from "http-status";
 import config from "./config";
 import router from "./routes";
+import globalErrorHandler from "./middleware/globalErrorHandlers";
 
 const app = express();
 app.use(helmet());
@@ -48,5 +49,7 @@ app.use((req, res) => {
 		message: "Route Not Found",
 	});
 });
+
+app.use(globalErrorHandler);
 
 export default app;

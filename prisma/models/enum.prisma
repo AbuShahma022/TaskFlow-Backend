@@ -1,5 +1,108 @@
-enum Role {
+enum UserRole {
   ADMIN
+  USER
+}
+
+enum UserStatus {
+  ACTIVE
+  BLOCKED
+}
+
+enum OrganizationRole {
   MANAGER
   MEMBER
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  CANCELLED
+}
+
+enum ProjectStatus {
+  ACTIVE
+  ARCHIVED
+}
+
+enum SprintStatus {
+  PLANNED
+  ACTIVE
+  COMPLETED
+  ARCHIVED
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  IN_REVIEW
+  DONE
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum SubtaskStatus {
+  TODO
+  IN_PROGRESS
+  DONE
+}
+
+enum ActivityAction {
+  PROJECT_CREATED
+  PROJECT_UPDATED
+  PROJECT_ARCHIVED
+
+  MEMBER_INVITED
+  MEMBER_ADDED
+  MEMBER_REMOVED
+
+  TASK_CREATED
+  TASK_UPDATED
+  TASK_ASSIGNED
+  TASK_STATUS_CHANGED
+  TASK_COMPLETED
+
+  SPRINT_STARTED
+  SPRINT_COMPLETED
+
+  SUBSCRIPTION_CHANGED
+  PAYMENT_COMPLETED
+}
+
+enum ActivityEntityType {
+  ORGANIZATION
+  MEMBER
+  TEAM
+  PROJECT
+  SPRINT
+  TASK
+  COMMENT
+  SUBSCRIPTION
+  PAYMENT
+}
+
+enum SubscriptionPlan {
+  FREE
+  PRO
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  EXPIRED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  CANCELLED
+}
+
+enum PaymentProvider {
+  STRIPE
 }

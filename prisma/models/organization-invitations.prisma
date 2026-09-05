@@ -1,0 +1,19 @@
+model OrganizationInvitation {
+  id             String           @id @default(uuid())
+  organizationId String
+  invitedUserId  String
+  invitedById    String
+  status         InvitationStatus @default(PENDING)
+  createdAt      DateTime         @default(now())
+  respondedAt    DateTime?
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  invitedUser  User         @relation("ReceivedInvitations", fields: [invitedUserId], references: [id])
+  invitedBy    User         @relation("SentInvitations", fields: [invitedById], references: [id])
+
+  @@index([organizationId])
+  @@index([invitedUserId])
+  @@index([invitedById])
+  @@index([status])
+  @@map("organization_invitations")
+}

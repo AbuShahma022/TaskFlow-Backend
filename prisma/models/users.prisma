@@ -1,15 +1,28 @@
 model User {
-  id        String   @id @default(uuid())
-  name      String
-  email     String   @unique
-  password  String
-  role      Role     @default(MEMBER)
+  id                  String                   @id @default(uuid())
+  name                String
+  email               String                   @unique
+  passwordHash        String?
+  googleId            String?                  @unique
+  avatar              String?
+  role                UserRole                 @default(USER)
+  emailVerified       Boolean                  @default(false)
+  status              UserStatus               @default(ACTIVE)
+  createdAt           DateTime                 @default(now())
+  updatedAt           DateTime                 @updatedAt
+  deletedAt           DateTime?
+  organizationMembers OrganizationMember[]
+  receivedInvitations OrganizationInvitation[] @relation("ReceivedInvitations")
+  sentInvitations     OrganizationInvitation[] @relation("SentInvitations")
+  teamMembers         TeamMember[]
+  projectMembers      ProjectMember[]
+  assignedTasks       Task[]                   @relation("AssignedTasks")
+  createdTasks        Task[]                   @relation("CreatedTasks")
+  assignedSubtasks    Subtask[]                @relation("AssignedSubtasks")
+  comments            Comment[]
+  uploadedAttachments Attachment[]             @relation("UploadedAttachments")
+  activityLogs        ActivityLog[]
+  payments            Payment[]
 
-  profileImage   String?
-
-  isEmailVerified Boolean @default(false)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
   @@map("users")
 }

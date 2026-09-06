@@ -1,5 +1,6 @@
 import { Router } from "express";
 import authRoute from "../modules/auth/auth.route";
+import userRoute from "../modules/user/user.route";
 
 interface IRoute {
 	path: string;
@@ -12,6 +13,10 @@ const allRoutes: IRoute[] = [
     path: "/auth",
     route: authRoute,
   },
+  {
+	path:"/users",
+	route:userRoute
+  }
 
 
 

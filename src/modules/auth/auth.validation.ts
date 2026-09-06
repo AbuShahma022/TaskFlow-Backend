@@ -71,6 +71,12 @@ const resetPasswordSchema = z.object({
   }),
 });
 
+const googleLoginSchema = z.object({
+  body: z.object({
+    idToken: z.string().min(1, "Google ID token is required"),
+  }),
+});
+
 export const authValidation = {
   registerSchema,
   loginSchema,
@@ -78,4 +84,5 @@ export const authValidation = {
   forgotPasswordSchema,
   verifyResetOTPSchema,
   resetPasswordSchema,
+  googleLoginSchema,
 };

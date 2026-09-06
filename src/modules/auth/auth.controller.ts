@@ -177,10 +177,42 @@ const resetPassword = catchAsync(
   },
 );
 
+const googleLogin = catchAsync(
+  async (req: Request, res: Response) => {
+    const result = await authService.googleLogin(
+      req.body.idToken,
+    );
+
+    res.cookie("accessToken", result.accessToken, {
+      httpOnly: true,
+      secure: config.nodeEnv === "production",
+      sameSite: config.nodeEnv === "production" ? "none" : "lax",
+    });
+
+    res.cookie("refreshToken", result.refreshToken, {
+      httpOnly: true,
+      secure: config.nodeEnv === "production",
+      sameSite: config.nodeEnv === "production" ? "none" : "lax",
+    });
+
+    sendResponse(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: "Google login successful",
+      data: {
+        accessToken: result.accessToken,
+        refreshToken: result.refreshToken,
+        user: result.user,
+      },
+    });
+  },
+);
+
 export const authController = {
   register,
   login,
   getMe,
+  googleLogin,
   sendVerificationOTP,
   logout,
   refreshToken,

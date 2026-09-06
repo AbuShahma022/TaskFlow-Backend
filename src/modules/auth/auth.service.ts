@@ -10,6 +10,7 @@ import { SignOptions } from "jsonwebtoken";
 import { redisUtils } from "../../utils/redis";
 import generateOTP from "../../utils/otp";
 import sendEmail from "../../utils/sendEmail";
+import { googleUtils } from "../../utils/google";
 
 
 const register = async (payload: IRegisterUser) => {
@@ -550,6 +551,98 @@ const resetPassword = async (
   };
 };
 
+const googleLogin = async (idToken: string) => {
+  const googleUser = await googleUtils.verifyGoogleToken(idToken);
+
+  if (!googleUser.email) {
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      "Google account email is not available",
+    );
+  }
+
+  const googleId = googleUser.sub;
+  const email = googleUser.email;
+  const name = googleUser.name || "Google User";
+  const avatar = googleUser.picture;
+
+  let user = await prisma.user.findUnique({
+    where: { googleId },
+  });
+
+  if (!user) {
+    user = await prisma.user.findUnique({
+      where: { email },
+    });
+  }
+
+  if (user) {
+    if (user.deletedAt) {
+      throw new AppError(
+        httpStatus.FORBIDDEN,
+        "This account has been deleted",
+      );
+    }
+
+    if (user.status === "BLOCKED") {
+      throw new AppError(
+        httpStatus.FORBIDDEN,
+        "This account has been blocked",
+      );
+    }
+
+    user = await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        googleId,
+        avatar: avatar ?? user.avatar,
+        emailVerified: true,
+      },
+    });
+  } else {
+    user = await prisma.user.create({
+      data: {
+        name,
+        email,
+        googleId,
+        avatar,
+        emailVerified: true,
+      },
+    });
+  }
+
+  const jwtPayload = {
+    userId: user.id,
+    email: user.email,
+    role: user.role,
+  };
+
+  const accessToken = jwtUtils.createToken(
+    jwtPayload,
+    config.jwt.accessTokenSecret,
+    config.jwt.accessTokenExpiresIn as SignOptions,
+  );
+
+  const refreshToken = jwtUtils.createToken(
+    jwtPayload,
+    config.jwt.refreshTokenSecret,
+    config.jwt.refreshTokenExpiresIn as SignOptions,
+  );
+
+  return {
+    accessToken,
+    refreshToken,
+    user: {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      status: user.status,
+      emailVerified: user.emailVerified,
+    },
+  };
+};
+
 export const authService = {
   register,
   login,
@@ -559,4 +652,5 @@ export const authService = {
   forgotPassword,
   verifyResetOTP,
   resetPassword,
+  googleLogin,
 };

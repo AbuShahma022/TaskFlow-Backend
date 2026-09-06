@@ -60,4 +60,10 @@ router.post(
   authController.resetPassword,
 );
 
+router.post(
+  "/google",
+  validateZodSchema(authValidation.googleLoginSchema),
+  authController.googleLogin,
+);
+
 export default router;

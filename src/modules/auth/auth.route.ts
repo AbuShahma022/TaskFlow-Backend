@@ -29,4 +29,35 @@ router.post(
   authController.refreshToken,
 );
 
+router.post(
+  "/send-verification-otp",
+  authGuard,
+  authController.sendVerificationOTP,
+);
+
+router.post(
+  "/verify-email",
+  authGuard,
+  validateZodSchema(authValidation.verifyEmailSchema),
+  authController.verifyEmail,
+);
+
+router.post(
+  "/forgot-password",
+  validateZodSchema(authValidation.forgotPasswordSchema),
+  authController.forgotPassword,
+);
+
+router.post(
+  "/verify-reset-otp",
+  validateZodSchema(authValidation.verifyResetOTPSchema),
+  authController.verifyResetOTP,
+);
+
+router.post(
+  "/reset-password",
+  validateZodSchema(authValidation.resetPasswordSchema),
+  authController.resetPassword,
+);
+
 export default router;

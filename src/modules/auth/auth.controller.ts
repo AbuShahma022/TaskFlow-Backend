@@ -98,10 +98,94 @@ const refreshToken = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const sendVerificationOTP = catchAsync(
+  async (req: Request, res: Response) => {
+    const result = await authService.sendVerificationOTP(
+      req.user!.id,
+    );
+
+    sendResponse(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: "Verification OTP sent successfully",
+      data: result,
+    });
+  },
+);
+
+const verifyEmail = catchAsync(
+  async (req: Request, res: Response) => {
+    const result = await authService.verifyEmail(
+      req.user!.id,
+      req.body.otp,
+    );
+
+    sendResponse(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: "Email verified successfully",
+      data: result,
+    });
+  },
+);
+
+const forgotPassword = catchAsync(
+  async (req: Request, res: Response) => {
+    const result = await authService.forgotPassword(
+      req.body.email,
+    );
+
+    sendResponse(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: "Password reset OTP sent successfully",
+      data: result,
+    });
+  },
+);
+
+const verifyResetOTP = catchAsync(
+  async (req: Request, res: Response) => {
+    const result = await authService.verifyResetOTP(
+      req.body.email,
+      req.body.otp,
+    );
+
+    sendResponse(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: "Password reset OTP verified successfully",
+      data: result,
+    });
+  },
+);
+
+const resetPassword = catchAsync(
+  async (req: Request, res: Response) => {
+    const result = await authService.resetPassword(
+      req.body.email,
+      req.body.otp,
+      req.body.newPassword,
+    );
+
+    sendResponse(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: "Password reset successfully",
+      data: result,
+    });
+  },
+);
+
 export const authController = {
   register,
   login,
   getMe,
+  sendVerificationOTP,
   logout,
   refreshToken,
+  verifyEmail,
+  forgotPassword,
+  verifyResetOTP,
+  resetPassword,
 };

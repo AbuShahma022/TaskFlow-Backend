@@ -13,6 +13,13 @@ const config = {
 	databaseUrl: process.env.DATABASE_URL,
 
 	bcryptSaltRounds: Number(process.env.BCRYPT_SALT_ROUNDS) || 10,
+	redis_user: process.env.REDIS_USER!,
+	redis_password: process.env.REDIS_PASSWORD!,
+	redis_host: process.env.REDIS_HOST!,
+	redis_port: Number(process.env.REDIS_PORT)! ,
+	smtp_user : process.env.SMTP_USER!,
+	smtp_password : process.env.SMTP_PASSWORD!,
+	email_sender : process.env.EMAIL_SENDER!,
 	jwt: {
 		accessTokenSecret: process.env.JWT_ACCESS_SECRET!,
 		accessTokenExpiresIn: process.env.JWT_ACCESS_EXPIRES_IN!,

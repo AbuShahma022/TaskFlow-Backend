@@ -7,6 +7,9 @@ import type { ILoginUser, IRegisterUser } from "./auth.interface";
 import config from "../../config";
 import { jwtUtils } from "../../utils/jwt";
 import { SignOptions } from "jsonwebtoken";
+import { redisUtils } from "../../utils/redis";
+import generateOTP from "../../utils/otp";
+import sendEmail from "../../utils/sendEmail";
 
 
 const register = async (payload: IRegisterUser) => {
@@ -44,6 +47,7 @@ const register = async (payload: IRegisterUser) => {
       createdAt: true,
     },
   });
+
 
   return user;
 };
@@ -208,8 +212,351 @@ const accessToken = jwtUtils.createToken(
   };
 };
 
+const sendVerificationOTP = async (userId: string) => {
+  const user = await prisma.user.findUnique({
+    where: {
+      id: userId,
+    },
+    select: {
+      id: true,
+      email: true,
+      emailVerified: true,
+      status: true,
+      deletedAt: true,
+    },
+  });
+
+  if (!user) {
+    throw new AppError(
+      httpStatus.NOT_FOUND,
+      "User not found",
+    );
+  }
+
+  if (user.deletedAt) {
+    throw new AppError(
+      httpStatus.FORBIDDEN,
+      "This account has been deleted",
+    );
+  }
+
+  if (user.status === "BLOCKED") {
+    throw new AppError(
+      httpStatus.FORBIDDEN,
+      "This account has been blocked",
+    );
+  }
+
+  if (user.emailVerified) {
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      "Email is already verified",
+    );
+  }
+
+  const otp = generateOTP();
+
+  await redisUtils.setValue(
+    `email_verification:${user.email}`,
+    otp,
+    300,
+  );
+
+await sendEmail({
+  to: user.email,
+  subject: "TaskFlow Email Verification OTP",
+  html: `
+    <div>
+      <h2>TaskFlow Email Verification</h2>
+      <p>Your verification OTP is:</p>
+      <h1>${otp}</h1>
+      <p>This OTP will expire in 5 minutes.</p>
+      <p>If you did not request this OTP, please ignore this email.</p>
+    </div>
+  `,
+});
+  return {
+    email: user.email,
+  };
+};
+
+const verifyEmail = async (userId: string, otp: string) => {
+  const user = await prisma.user.findUnique({
+    where: {
+      id: userId,
+    },
+    select: {
+      id: true,
+      email: true,
+      emailVerified: true,
+      status: true,
+      deletedAt: true,
+    },
+  });
+
+  if (!user) {
+    throw new AppError(
+      httpStatus.NOT_FOUND,
+      "User not found",
+    );
+  }
+
+  if (user.deletedAt) {
+    throw new AppError(
+      httpStatus.FORBIDDEN,
+      "This account has been deleted",
+    );
+  }
+
+  if (user.status === "BLOCKED") {
+    throw new AppError(
+      httpStatus.FORBIDDEN,
+      "This account has been blocked",
+    );
+  }
+
+  if (user.emailVerified) {
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      "Email is already verified",
+    );
+  }
+
+  const storedOTP = await redisUtils.getValue(
+    `email_verification:${user.email}`,
+  );
+
+  if (!storedOTP) {
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      "OTP has expired or does not exist",
+    );
+  }
+
+  if (storedOTP !== otp) {
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      "Invalid OTP",
+    );
+  }
+
+  await prisma.user.update({
+    where: {
+      id: user.id,
+    },
+    data: {
+      emailVerified: true,
+    },
+  });
+
+  await redisUtils.deleteValue(
+    `email_verification:${user.email}`,
+  );
+
+  return {
+    email: user.email,
+    emailVerified: true,
+  };
+};
+
+const forgotPassword = async (email: string) => {
+  const user = await prisma.user.findUnique({
+    where: {
+      email,
+    },
+    select: {
+      id: true,
+      email: true,
+      status: true,
+      deletedAt: true,
+    },
+  });
+
+  if (!user) {
+    throw new AppError(
+      httpStatus.NOT_FOUND,
+      "No account found with this email",
+    );
+  }
+
+  if (user.deletedAt) {
+    throw new AppError(
+      httpStatus.FORBIDDEN,
+      "This account has been deleted",
+    );
+  }
+
+  if (user.status === "BLOCKED") {
+    throw new AppError(
+      httpStatus.FORBIDDEN,
+      "This account has been blocked",
+    );
+  }
+
+  const otp = generateOTP();
+
+  await redisUtils.setValue(
+    `password_reset:${user.email}`,
+    otp,
+    300,
+  );
+
+  await sendEmail({
+    to: user.email,
+    subject: "TaskFlow Password Reset OTP",
+    html: `
+      <div>
+        <h2>TaskFlow Password Reset</h2>
+        <p>Your password reset OTP is:</p>
+        <h1>${otp}</h1>
+        <p>This OTP will expire in 5 minutes.</p>
+        <p>If you did not request a password reset, please ignore this email.</p>
+      </div>
+    `,
+  });
+
+  return {
+    email: user.email,
+  };
+};
+
+const verifyResetOTP = async (email: string, otp: string) => {
+  const user = await prisma.user.findUnique({
+    where: { email },
+    select: {
+      id: true,
+      email: true,
+      status: true,
+      deletedAt: true,
+    },
+  });
+
+  if (!user) {
+    throw new AppError(
+      httpStatus.NOT_FOUND,
+      "No account found with this email",
+    );
+  }
+
+  if (user.deletedAt) {
+    throw new AppError(
+      httpStatus.FORBIDDEN,
+      "This account has been deleted",
+    );
+  }
+
+  if (user.status === "BLOCKED") {
+    throw new AppError(
+      httpStatus.FORBIDDEN,
+      "This account has been blocked",
+    );
+  }
+
+  const storedOTP = await redisUtils.getValue(
+    `password_reset:${user.email}`,
+  );
+
+  if (!storedOTP) {
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      "OTP has expired or does not exist",
+    );
+  }
+
+  if (storedOTP !== otp) {
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      "Invalid OTP",
+    );
+  }
+
+  return {
+    email: user.email,
+    verified: true,
+  };
+};
+
+const resetPassword = async (
+  email: string,
+  otp: string,
+  newPassword: string,
+) => {
+  const user = await prisma.user.findUnique({
+    where: { email },
+    select: {
+      id: true,
+      email: true,
+      status: true,
+      deletedAt: true,
+    },
+  });
+
+  if (!user) {
+    throw new AppError(
+      httpStatus.NOT_FOUND,
+      "No account found with this email",
+    );
+  }
+
+  if (user.deletedAt) {
+    throw new AppError(
+      httpStatus.FORBIDDEN,
+      "This account has been deleted",
+    );
+  }
+
+  if (user.status === "BLOCKED") {
+    throw new AppError(
+      httpStatus.FORBIDDEN,
+      "This account has been blocked",
+    );
+  }
+
+  const storedOTP = await redisUtils.getValue(
+    `password_reset:${user.email}`,
+  );
+
+  if (!storedOTP) {
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      "OTP has expired or does not exist",
+    );
+  }
+
+  if (storedOTP !== otp) {
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      "Invalid OTP",
+    );
+  }
+
+  const passwordHash = await bcrypt.hash(
+    newPassword,
+    config.bcryptSaltRounds,
+  );
+
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { passwordHash },
+  });
+
+  await redisUtils.deleteValue(
+    `password_reset:${user.email}`,
+  );
+
+  return {
+    email: user.email,
+    passwordReset: true,
+  };
+};
+
 export const authService = {
   register,
   login,
   refreshToken,
+  sendVerificationOTP,
+  verifyEmail,
+  forgotPassword,
+  verifyResetOTP,
+  resetPassword,
 };

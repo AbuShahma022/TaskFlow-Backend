@@ -136,7 +136,80 @@ const login = async (payload: ILoginUser) => {
   };
 };
 
+const refreshToken = async (token: string) => {
+  const verifiedToken = jwtUtils.verifyToken(
+    token,
+    config.jwt.refreshTokenSecret,
+  );
+
+  if (!verifiedToken.success) {
+    throw new AppError(
+      httpStatus.UNAUTHORIZED,
+      "Invalid or expired refresh token",
+    );
+  }
+
+  const payload = verifiedToken.data as {
+    userId: string;
+    email: string;
+    role: string;
+  };
+
+  const user = await prisma.user.findUnique({
+    where: {
+      id: payload.userId,
+    },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      role: true,
+      status: true,
+      emailVerified: true,
+      deletedAt: true,
+    },
+  });
+
+  if (!user) {
+    throw new AppError(
+      httpStatus.UNAUTHORIZED,
+      "User not found",
+    );
+  }
+
+  if (user.deletedAt) {
+    throw new AppError(
+      httpStatus.FORBIDDEN,
+      "This account has been deleted",
+    );
+  }
+
+  if (user.status === "BLOCKED") {
+    throw new AppError(
+      httpStatus.FORBIDDEN,
+      "This account has been blocked",
+    );
+  }
+
+  const jwtPayload = {
+    userId: user.id,
+    email: user.email,
+    role: user.role,
+  };
+
+const accessToken = jwtUtils.createToken(
+    jwtPayload,
+    config.jwt.accessTokenSecret,
+    config.jwt.accessTokenExpiresIn as SignOptions,
+  );
+
+  return {
+    accessToken,
+  };
+};
+
 export const authService = {
   register,
-  login
+  login,
+  refreshToken,
 };

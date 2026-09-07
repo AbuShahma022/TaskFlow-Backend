@@ -431,9 +431,78 @@ const getOrganizationInvitations = async (
   };
 };
 
+const cancelOrganizationInvitation = async (
+  userId: string,
+  invitationId: string,
+) => {
+  const invitation = await prisma.organizationInvitation.findUnique({
+    where: {
+      id: invitationId,
+    },
+  });
+
+  if (!invitation) {
+    throw new AppError(
+      httpStatus.NOT_FOUND,
+      "Organization invitation not found",
+    );
+  }
+
+  const manager = await prisma.organizationMember.findFirst({
+    where: {
+      organizationId: invitation.organizationId,
+      userId,
+      role: "MANAGER",
+    },
+  });
+
+  if (!manager) {
+    throw new AppError(
+      httpStatus.FORBIDDEN,
+      "Only organization managers can cancel invitations",
+    );
+  }
+
+  if (invitation.status !== "PENDING") {
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      "Only pending invitations can be cancelled",
+    );
+  }
+
+  await prisma.$transaction(async (tx) => {
+    await tx.organizationInvitation.update({
+      where: {
+        id: invitation.id,
+      },
+      data: {
+        status: "CANCELLED",
+      },
+    });
+
+    await tx.activityLog.create({
+      data: {
+        organizationId: invitation.organizationId,
+        userId,
+        action: "INVITATION_CANCELLED",
+        entityType: "MEMBER",
+        entityId: invitation.invitedUserId,
+        description: "Organization invitation cancelled",
+        metadata: {
+          invitationId: invitation.id,
+          invitedUserId: invitation.invitedUserId,
+        },
+      },
+    });
+  });
+
+  return null;
+};
+
 export const organizationInvitationService = {
   createOrganizationInvitation,
     respondToOrganizationInvitation,
     getMyInvitations,
     getOrganizationInvitations,
+    cancelOrganizationInvitation
 };

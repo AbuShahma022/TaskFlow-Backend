@@ -33,6 +33,15 @@ router.patch(
   organizationInvitationController.respondToOrganizationInvitation,
 );
 
+router.patch(
+  "/invitations/:id/cancel",
+  authGuard,
+  validateZodSchema(
+    organizationInvitationValidation.cancelOrganizationInvitationSchema,
+  ),
+  organizationInvitationController.cancelOrganizationInvitation,
+);
+
 router.post(
   "/:id/invitations",
   authGuard,

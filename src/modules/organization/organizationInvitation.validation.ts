@@ -41,9 +41,16 @@ const getOrganizationInvitationsSchema = z.object({
   }),
 });
 
+const cancelOrganizationInvitationSchema = z.object({
+  params: z.object({
+    id: z.string().uuid("Invalid invitation ID"),
+  }),
+});
+
 export const organizationInvitationValidation = {
   createOrganizationInvitationSchema,
   respondToOrganizationInvitationSchema,
   getMyInvitationsSchema,
-  getOrganizationInvitationsSchema
+  getOrganizationInvitationsSchema,
+  cancelOrganizationInvitationSchema
 };

@@ -89,9 +89,26 @@ const getOrganizationInvitations = catchAsync(
   },
 );
 
+const cancelOrganizationInvitation = catchAsync(
+  async (req: Request, res: Response) => {
+    await organizationInvitationService.cancelOrganizationInvitation(
+      req.user!.id,
+      req.params.id as string,
+    );
+
+    sendResponse(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: "Organization invitation cancelled successfully",
+      data: null,
+    });
+  },
+);
+
 export const organizationInvitationController = {
   createOrganizationInvitation,
   respondToOrganizationInvitation,
   getMyInvitations,
   getOrganizationInvitations,
+  cancelOrganizationInvitation
 };

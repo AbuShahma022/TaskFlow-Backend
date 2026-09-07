@@ -2,7 +2,7 @@ import httpStatus from "http-status";
 
 import { prisma } from "../../lib/prisma";
 import AppError from "../../utils/AppError";
-import { ICreateOrganizationInvitation } from "./organizationInvitation.interface";
+import { ICreateOrganizationInvitation, IRespondToOrganizationInvitation } from "./organizationInvitation.interface";
 
 
 const createOrganizationInvitation = async (
@@ -67,7 +67,7 @@ const createOrganizationInvitation = async (
     );
   }
 
-  // 3. Don't invite an existing organization member
+  // 3. Prevent inviting an existing organization member
   const existingMember = await prisma.organizationMember.findUnique({
     where: {
       organizationId_userId: {
@@ -84,7 +84,7 @@ const createOrganizationInvitation = async (
     );
   }
 
-  // 4. Don't create another pending invitation
+  // 4. Prevent creating another pending invitation
   const existingInvitation =
     await prisma.organizationInvitation.findFirst({
       where: {
@@ -126,6 +126,84 @@ const createOrganizationInvitation = async (
   return invitation;
 };
 
+
+const respondToOrganizationInvitation = async (
+  userId: string,
+  invitationId: string,
+  payload: IRespondToOrganizationInvitation,
+) => {
+  // 1. Find the invitation belonging to the current user
+  const invitation = await prisma.organizationInvitation.findFirst({
+    where: {
+      id: invitationId,
+      invitedUserId: userId,
+      status: "PENDING",
+    },
+    select: {
+      id: true,
+      organizationId: true,
+      invitedUserId: true,
+      status: true,
+    },
+  });
+
+  if (!invitation) {
+    throw new AppError(
+      httpStatus.NOT_FOUND,
+      "Pending invitation not found",
+    );
+  }
+
+  // 2. If rejected,  update the invitation
+  if (payload.status === "REJECTED") {
+    return prisma.organizationInvitation.update({
+      where: {
+        id: invitation.id,
+      },
+      data: {
+        status: "REJECTED",
+        respondedAt: new Date(),
+      },
+    });
+  }
+
+  // 3. Accept invitation and add user to organization atomically
+  const result = await prisma.$transaction(
+    async (tx) => {
+      const member = await tx.organizationMember.create({
+        data: {
+          organizationId: invitation.organizationId,
+          userId,
+          role: "MEMBER",
+        },
+      });
+
+      const updatedInvitation =
+        await tx.organizationInvitation.update({
+          where: {
+            id: invitation.id,
+          },
+          data: {
+            status: "ACCEPTED",
+            respondedAt: new Date(),
+          },
+        });
+
+      return {
+        invitation: updatedInvitation,
+        member,
+      };
+    },
+    {
+      maxWait: 10000,
+      timeout: 10000,
+    },
+  );
+
+  return result;
+};
+
 export const organizationInvitationService = {
   createOrganizationInvitation,
+    respondToOrganizationInvitation,
 };

@@ -23,6 +23,28 @@ const createOrganizationInvitation = catchAsync(
   },
 );
 
+const respondToOrganizationInvitation = catchAsync(
+  async (req: Request, res: Response) => {
+    const result =
+      await organizationInvitationService.respondToOrganizationInvitation(
+        req.user!.id,
+        req.params.id as string,
+        req.body,
+      );
+
+    sendResponse(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message:
+        req.body.status === "ACCEPTED"
+          ? "Organization invitation accepted successfully"
+          : "Organization invitation rejected successfully",
+      data: result,
+    });
+  },
+);
+
 export const organizationInvitationController = {
   createOrganizationInvitation,
+  respondToOrganizationInvitation,
 };

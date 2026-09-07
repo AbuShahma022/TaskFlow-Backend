@@ -9,6 +9,16 @@ const createOrganizationInvitationSchema = z.object({
   }),
 });
 
+const respondToOrganizationInvitationSchema = z.object({
+  params: z.object({
+    id: z.string().uuid("Invalid invitation ID"),
+  }),
+  body: z.object({
+    status: z.enum(["ACCEPTED", "REJECTED"]),
+  }),
+});
+
 export const organizationInvitationValidation = {
   createOrganizationInvitationSchema,
+  respondToOrganizationInvitationSchema
 };

@@ -20,12 +20,26 @@ router.get(
   teamController.getTeam,
 );
 
+router.patch(
+  "/:organizationId/teams/:teamId",
+  authGuard,
+  validateZodSchema(teamValidation.updateTeamSchema),
+  teamController.updateTeam,
+);
+
 
 router.post(
   "/:organizationId/teams",
   authGuard,
   validateZodSchema(teamValidation.createTeamSchema),
   teamController.createTeam,
+);
+
+router.delete(
+  "/:organizationId/teams/:teamId",
+  authGuard,
+  validateZodSchema(teamValidation.deleteTeamSchema),
+  teamController.deleteTeam,
 );
 
 export default router;

@@ -1,6 +1,6 @@
 import { prisma } from "../../../lib/prisma";
 import AppError from "../../../utils/AppError";
-import { ICreateTeam, IGetTeamsQuery } from "../team.interface";
+import { ICreateTeam, IGetTeamsQuery, IUpdateTeam } from "../team.interface";
 import httpStatus from "http-status";
 
 
@@ -194,9 +194,109 @@ const getTeam = async (
 };
 
 
+const updateTeam = async (
+  userId: string,
+  organizationId: string,
+  teamId: string,
+  payload: IUpdateTeam,
+) => {
+  const organizationMember = await prisma.organizationMember.findFirst({
+    where: {
+      organizationId,
+      userId,
+    },
+  });
+
+  if (!organizationMember) {
+    throw new AppError(
+      httpStatus.FORBIDDEN,
+      "You are not a member of this organization",
+    );
+  }
+
+  if (organizationMember.role !== "MANAGER") {
+    throw new AppError(
+      httpStatus.FORBIDDEN,
+      "Only organization managers can update teams",
+    );
+  }
+
+  const team = await prisma.team.findFirst({
+    where: {
+      id: teamId,
+      organizationId,
+      deletedAt: null,
+    },
+  });
+
+  if (!team) {
+    throw new AppError(httpStatus.NOT_FOUND, "Team not found");
+  }
+
+  const updatedTeam = await prisma.team.update({
+    where: {
+      id: teamId,
+    },
+    data: payload,
+  });
+
+  return updatedTeam;
+};
+
+const deleteTeam = async (
+  userId: string,
+  organizationId: string,
+  teamId: string,
+) => {
+  const organizationMember = await prisma.organizationMember.findFirst({
+    where: {
+      organizationId,
+      userId,
+    },
+  });
+
+  if (!organizationMember) {
+    throw new AppError(
+      httpStatus.FORBIDDEN,
+      "You are not a member of this organization",
+    );
+  }
+
+  if (organizationMember.role !== "MANAGER") {
+    throw new AppError(
+      httpStatus.FORBIDDEN,
+      "Only organization managers can delete teams",
+    );
+  }
+
+  const team = await prisma.team.findFirst({
+    where: {
+      id: teamId,
+      organizationId,
+      deletedAt: null,
+    },
+  });
+
+  if (!team) {
+    throw new AppError(httpStatus.NOT_FOUND, "Team not found");
+  }
+
+  const deletedTeam = await prisma.team.update({
+    where: {
+      id: teamId,
+    },
+    data: {
+      deletedAt: new Date(),
+    },
+  });
+
+  return deletedTeam;
+};
+
 export const teamService = {
   createTeam,
   getTeams,
   getTeam,
-  
+  updateTeam,
+  deleteTeam,
 };

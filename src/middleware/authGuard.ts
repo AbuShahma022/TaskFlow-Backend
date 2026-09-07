@@ -6,6 +6,7 @@ import { prisma } from "../lib/prisma";
 import AppError from "../utils/AppError";
 import { jwtUtils } from "../utils/jwt";
 import catchAsync from "../utils/catchAsync";
+import { UserRole, UserStatus } from "../../generated/prisma/enums";
 
 declare global {
   namespace Express {
@@ -14,8 +15,8 @@ declare global {
         id: string;
         name: string;
         email: string;
-        role: string;
-        status: string;
+        role: UserRole;
+        status: UserStatus;
         emailVerified: boolean;
       };
     }
@@ -52,7 +53,7 @@ const authGuard = catchAsync(
     const payload = verifiedToken.data as {
       userId: string;
       email: string;
-      role: string;
+      role: UserRole;
     };
 
     const user = await prisma.user.findUnique({
@@ -84,7 +85,7 @@ const authGuard = catchAsync(
       );
     }
 
-    if (user.status === "BLOCKED") {
+    if (user.status === UserStatus.BLOCKED) {
       throw new AppError(
         httpStatus.FORBIDDEN,
         "This account has been blocked",

@@ -7,6 +7,23 @@ import { organizationInvitationValidation } from "./organizationInvitation.valid
 
 const router = Router();
 
+router.get(
+  "/invitations/me",
+  authGuard,
+  validateZodSchema(
+    organizationInvitationValidation.getMyInvitationsSchema,
+  ),
+  organizationInvitationController.getMyInvitations,
+);
+
+router.get(
+  "/:id/invitations",
+  authGuard,
+  validateZodSchema(
+    organizationInvitationValidation.getOrganizationInvitationsSchema,
+  ),
+  organizationInvitationController.getOrganizationInvitations,
+);
 router.patch(
   "/invitations/:id",
   authGuard,

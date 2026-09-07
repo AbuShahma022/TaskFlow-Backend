@@ -2,6 +2,7 @@ import { Router } from "express";
 import authRoute from "../modules/auth/auth.route";
 import userRoute from "../modules/user/user.route";
 import organizationRoute from "../modules/organization/organization.route";
+import organizationInvitationRoute from "../modules/organization/organizationInvitation.route";
 
 interface IRoute {
 	path: string;
@@ -21,7 +22,11 @@ const allRoutes: IRoute[] = [
   {
 	path:"/organizations",
 	route:organizationRoute
-  }
+  },
+    {
+    path: "/organizations",
+    route: organizationInvitationRoute,
+  },
 
 
 

@@ -8,3 +8,7 @@ export interface IUpdateOrganization {
   name?: string;
   description?: string;
 }
+
+export interface ICreateOrganizationInvitation {
+  email: string;
+}

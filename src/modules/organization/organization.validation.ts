@@ -70,6 +70,8 @@ const updateOrganizationSchema = z.object({
   }),
 });
 
+
+
 export const organizationValidation = {
   createOrganizationSchema,
     getMyOrganizationsSchema,

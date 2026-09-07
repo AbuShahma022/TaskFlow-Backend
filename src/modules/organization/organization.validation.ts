@@ -71,10 +71,42 @@ const updateOrganizationSchema = z.object({
 });
 
 
+const getOrganizationMembersSchema = z.object({
+  params: z.object({
+    id: z.string().uuid("Invalid organization ID"),
+  }),
+  query: z.object({
+    page: z.coerce.number().int().min(1).optional(),
+    limit: z.coerce.number().int().min(1).max(100).optional(),
+    search: z.string().trim().optional(),
+    role: z.enum(["MANAGER", "MEMBER"]).optional(),
+  }),
+});
+
+const updateOrganizationMemberRoleSchema = z.object({
+  params: z.object({
+    id: z.string().uuid("Invalid organization ID"),
+    memberId: z.string().uuid("Invalid member ID"),
+  }),
+  body: z.object({
+    role: z.enum(["MANAGER", "MEMBER"]),
+  }),
+});
+
+const removeOrganizationMemberSchema = z.object({
+  params: z.object({
+    id: z.string().uuid("Invalid organization ID"),
+    memberId: z.string().uuid("Invalid member ID"),
+  }),
+});
+
 
 export const organizationValidation = {
   createOrganizationSchema,
     getMyOrganizationsSchema,
     getOrganizationByIdSchema,
-    updateOrganizationSchema
+    updateOrganizationSchema,
+    getOrganizationMembersSchema,
+    updateOrganizationMemberRoleSchema,
+    removeOrganizationMemberSchema,
 };

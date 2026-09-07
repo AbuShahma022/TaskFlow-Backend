@@ -12,3 +12,14 @@ export interface IUpdateOrganization {
 export interface ICreateOrganizationInvitation {
   email: string;
 }
+
+export interface IUpdateOrganizationMemberRole {
+  role: "MANAGER" | "MEMBER";
+}
+
+export interface IGetOrganizationMembersQuery {
+  page?: number;
+  limit?: number;
+  search?: string;
+  role?: "MANAGER" | "MEMBER";
+}

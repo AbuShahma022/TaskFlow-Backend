@@ -2,7 +2,7 @@ import httpStatus from "http-status";
 
 import { prisma } from "../../lib/prisma";
 import AppError from "../../utils/AppError";
-import type { ICreateOrganization, IUpdateOrganization } from "./organization.interface";
+import type { ICreateOrganization, IGetOrganizationMembersQuery, IUpdateOrganization, IUpdateOrganizationMemberRole } from "./organization.interface";
 
 const createOrganization = async (
   userId: string,
@@ -257,9 +257,265 @@ const updateOrganization = async (
   return organization;
 };
 
+const getOrganizationMembers = async (
+  userId: string,
+  organizationId: string,
+  query: IGetOrganizationMembersQuery,
+) => {
+const page = Number(query.page) || 1;
+const limit = Number(query.limit) || 10;
+const { search, role } = query;
+
+  const organizationMember = await prisma.organizationMember.findFirst({
+    where: {
+      organizationId,
+      userId,
+    },
+  });
+
+  if (!organizationMember) {
+    throw new AppError(
+      httpStatus.FORBIDDEN,
+      "You are not a member of this organization",
+    );
+  }
+
+  const skip = (page - 1) * limit;
+
+  const where = {
+    organizationId,
+    ...(role && { role }),
+    ...(search && {
+      user: {
+        OR: [
+          {
+            name: {
+              contains: search,
+              mode: "insensitive" as const,
+            },
+          },
+          {
+            email: {
+              contains: search,
+              mode: "insensitive" as const,
+            },
+          },
+        ],
+      },
+    }),
+  };
+
+  const [members, total] = await prisma.$transaction([
+    prisma.organizationMember.findMany({
+      where,
+      skip,
+      take: limit,
+      orderBy: {
+        joinedAt: "desc",
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            avatar: true,
+            role: true,
+            emailVerified: true,
+          },
+        },
+      },
+    }),
+    prisma.organizationMember.count({ where }),
+  ]);
+
+  return {
+    meta: {
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+    },
+    data: members,
+  };
+
+};
+
+const updateOrganizationMemberRole = async (
+  userId: string,
+  organizationId: string,
+  memberId: string,
+  payload: IUpdateOrganizationMemberRole,
+) => {
+  const requester = await prisma.organizationMember.findFirst({
+    where: {
+      organizationId,
+      userId,
+    },
+  });
+
+  if (!requester) {
+    throw new AppError(
+      httpStatus.FORBIDDEN,
+      "You are not a member of this organization",
+    );
+  }
+
+  if (requester.role !== "MANAGER") {
+    throw new AppError(
+      httpStatus.FORBIDDEN,
+      "Only organization managers can change member roles",
+    );
+  }
+
+  const targetMember = await prisma.organizationMember.findFirst({
+    where: {
+      id: memberId,
+      organizationId,
+    },
+  });
+
+  if (!targetMember) {
+    throw new AppError(
+      httpStatus.NOT_FOUND,
+      "Organization member not found",
+    );
+  }
+
+  if (targetMember.role === payload.role) {
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      `Member is already a ${payload.role.toLowerCase()}`,
+    );
+  }
+
+  if (targetMember.role === "MANAGER" && payload.role === "MEMBER") {
+    const managerCount = await prisma.organizationMember.count({
+      where: {
+        organizationId,
+        role: "MANAGER",
+      },
+    });
+
+    if (managerCount <= 1) {
+      throw new AppError(
+        httpStatus.BAD_REQUEST,
+        "Organization must have at least one manager",
+      );
+    }
+  }
+
+  const updatedMember = await prisma.organizationMember.update({
+    where: {
+      id: targetMember.id,
+    },
+    data: {
+      role: payload.role,
+    },
+    include: {
+      user: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          avatar: true,
+          role: true,
+        },
+      },
+    },
+  });
+
+  return updatedMember;
+};
+
+const removeOrganizationMember = async (
+  userId: string,
+  organizationId: string,
+  memberId: string,
+) => {
+  const requester = await prisma.organizationMember.findFirst({
+    where: {
+      organizationId,
+      userId,
+    },
+  });
+
+  if (!requester) {
+    throw new AppError(
+      httpStatus.FORBIDDEN,
+      "You are not a member of this organization",
+    );
+  }
+
+  if (requester.role !== "MANAGER") {
+    throw new AppError(
+      httpStatus.FORBIDDEN,
+      "Only organization managers can remove members",
+    );
+  }
+
+  const targetMember = await prisma.organizationMember.findFirst({
+    where: {
+      id: memberId,
+      organizationId,
+    },
+  });
+
+  if (!targetMember) {
+    throw new AppError(
+      httpStatus.NOT_FOUND,
+      "Organization member not found",
+    );
+  }
+
+  if (targetMember.role === "MANAGER") {
+    const managerCount = await prisma.organizationMember.count({
+      where: {
+        organizationId,
+        role: "MANAGER",
+      },
+    });
+
+    if (managerCount <= 1) {
+      throw new AppError(
+        httpStatus.BAD_REQUEST,
+        "Organization must have at least one manager",
+      );
+    }
+  }
+
+  await prisma.$transaction(async (tx) => {
+    await tx.organizationMember.delete({
+      where: {
+        id: targetMember.id,
+      },
+    });
+
+    await tx.activityLog.create({
+      data: {
+        organizationId,
+        userId,
+        action: "MEMBER_REMOVED",
+        entityType: "MEMBER",
+        entityId: targetMember.id,
+        description: `Organization member removed`,
+        metadata: {
+          removedUserId: targetMember.userId,
+          removedRole: targetMember.role,
+        },
+      },
+    });
+  });
+
+  return null;
+};
+
 export const organizationService = {
   createOrganization,
   getMyOrganizations,
   getOrganizationById,
   updateOrganization,
+  getOrganizationMembers,
+  updateOrganizationMemberRole,
+  removeOrganizationMember,
 };

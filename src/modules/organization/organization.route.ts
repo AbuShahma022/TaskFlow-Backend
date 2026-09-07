@@ -20,11 +20,27 @@ router.get(
   organizationController.getOrganizationById,
 );
 
+router.get(
+  "/:id/members",
+  authGuard,
+  validateZodSchema(organizationValidation.getOrganizationMembersSchema),
+  organizationController.getOrganizationMembers,
+);
+
 router.patch(
   "/:id",
   authGuard,
   validateZodSchema(organizationValidation.updateOrganizationSchema),
   organizationController.updateOrganization,
+);
+
+router.patch(
+  "/:id/members/:memberId/role",
+  authGuard,
+  validateZodSchema(
+    organizationValidation.updateOrganizationMemberRoleSchema,
+  ),
+  organizationController.updateOrganizationMemberRole,
 );
 
 router.post(
@@ -34,4 +50,12 @@ router.post(
   organizationController.createOrganization,
 );
 
+router.delete(
+  "/:id/members/:memberId",
+  authGuard,
+  validateZodSchema(
+    organizationValidation.removeOrganizationMemberSchema,
+  ),
+  organizationController.removeOrganizationMember,
+);
 export default router;

@@ -4,6 +4,7 @@ import userRoute from "../modules/user/user.route";
 import organizationRoute from "../modules/organization/organization.route";
 import organizationInvitationRoute from "../modules/organization/organizationInvitation.route";
 import teamRoute from "../modules/team/team/team.route";
+import projectRoute from "../modules/project/project.route";
 
 interface IRoute {
 	path: string;
@@ -34,6 +35,11 @@ const allRoutes: IRoute[] = [
 
     route: teamRoute,
   },
+
+  {
+  path: "/organizations",
+  route: projectRoute,
+},
 ];
 allRoutes.forEach(({ path, route }) => {
 	router.use(path, route);

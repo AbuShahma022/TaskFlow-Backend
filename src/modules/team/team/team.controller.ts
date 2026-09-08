@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import httpStatus from "http-status";
 import { teamService } from "./team.service";
-import { ICreateTeam, IGetTeamsQuery, IUpdateTeam } from "../team.interface";
+import { IAddTeamMember, ICreateTeam, IGetTeamsQuery, IUpdateTeam } from "../team.interface";
 import catchAsync from "../../../utils/catchAsync";
 import sendResponse from "../../../utils/sendResponse";
 
@@ -82,10 +82,60 @@ const deleteTeam = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const addTeamMember = catchAsync(async (req: Request, res: Response) => {
+  const result = await teamService.addTeamMember(
+    req.user!.id,
+    req.params.organizationId as string,
+    req.params.teamId as string,
+    req.body as IAddTeamMember,
+  );
+
+  sendResponse(res, {
+    statusCode: httpStatus.CREATED,
+    success: true,
+    message: "Team member added successfully",
+    data: result,
+  });
+});
+
+const getTeamMembers = catchAsync(async (req: Request, res: Response) => {
+  const result = await teamService.getTeamMembers(
+    req.user!.id,
+    req.params.organizationId as string,
+    req.params.teamId as string,
+  );
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Team members retrieved successfully",
+    data: result,
+  });
+});
+
+const removeTeamMember = catchAsync(async (req: Request, res: Response) => {
+  const result = await teamService.removeTeamMember(
+    req.user!.id,
+    req.params.organizationId as string,
+    req.params.teamId as string,
+    req.params.memberId as string,
+  );
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Team member removed successfully",
+    data: result,
+  });
+});
+
 export const teamController = {
   createTeam,
   getTeams,
   getTeam,
   updateTeam,
   deleteTeam,
+  addTeamMember,
+  getTeamMembers,
+  removeTeamMember,
 };

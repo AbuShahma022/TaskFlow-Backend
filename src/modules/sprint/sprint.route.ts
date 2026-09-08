@@ -14,6 +14,41 @@ router.get(
   sprintController.getSprints,
 );
 
+router.get(
+  "/:organizationId/projects/:projectId/sprints/:sprintId",
+  authGuard,
+  validateZodSchema(sprintValidation.getSprintSchema),
+  sprintController.getSprint,
+);
+
+router.patch(
+  "/:organizationId/projects/:projectId/sprints/:sprintId",
+  authGuard,
+  validateZodSchema(sprintValidation.updateSprintSchema),
+  sprintController.updateSprint,
+);
+
+router.patch(
+  "/:organizationId/projects/:projectId/sprints/:sprintId/start",
+  authGuard,
+  validateZodSchema(sprintValidation.startSprintSchema),
+  sprintController.startSprint,
+);
+
+router.patch(
+  "/:organizationId/projects/:projectId/sprints/:sprintId/complete",
+  authGuard,
+  validateZodSchema(sprintValidation.completeSprintSchema),
+  sprintController.completeSprint,
+);
+
+router.patch(
+  "/:organizationId/projects/:projectId/sprints/:sprintId/archive",
+  authGuard,
+  validateZodSchema(sprintValidation.archiveSprintSchema),
+  sprintController.archiveSprint,
+);
+
 router.post(
   "/:organizationId/projects/:projectId/sprints",
   authGuard,

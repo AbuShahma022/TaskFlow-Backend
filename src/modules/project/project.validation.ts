@@ -47,10 +47,43 @@ const archiveProjectSchema = z.object({
   }),
 });
 
+const addProjectMemberSchema = z.object({
+  params: z.object({
+    organizationId: z.string().uuid("Invalid organization ID"),
+    projectId: z.string().uuid("Invalid project ID"),
+  }),
+  body: z.object({
+    userId: z.string().uuid("Invalid user ID"),
+  }),
+});
+
+const getProjectMembersSchema = z.object({
+  params: z.object({
+    organizationId: z.string().uuid("Invalid organization ID"),
+    projectId: z.string().uuid("Invalid project ID"),
+  }),
+  query: z.object({
+    page: z.coerce.number().int().min(1).optional(),
+    limit: z.coerce.number().int().min(1).max(100).optional(),
+    search: z.string().trim().optional(),
+  }),
+});
+
+const removeProjectMemberSchema = z.object({
+  params: z.object({
+    organizationId: z.string().uuid("Invalid organization ID"),
+    projectId: z.string().uuid("Invalid project ID"),
+    memberId: z.string().uuid("Invalid project member ID"),
+  }),
+});
+
 export const projectValidation = {
   createProjectSchema,
   getProjectsSchema,
   getProjectSchema,
   updateProjectSchema,
   archiveProjectSchema,
+  addProjectMemberSchema,
+  getProjectMembersSchema,
+  removeProjectMemberSchema
 };

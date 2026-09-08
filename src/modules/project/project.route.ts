@@ -23,11 +23,46 @@ router.get(
   projectController.getProject,
 );
 
+router.get(
+  "/:organizationId/projects/:projectId/members",
+  authGuard,
+  validateZodSchema(projectValidation.getProjectMembersSchema),
+  projectController.getProjectMembers,
+);
+
+router.patch(
+  "/:organizationId/projects/:projectId",
+  authGuard,
+  validateZodSchema(projectValidation.updateProjectSchema),
+  projectController.updateProject,
+);
+
+router.patch(
+  "/:organizationId/projects/:projectId/archive",
+  authGuard,
+  validateZodSchema(projectValidation.archiveProjectSchema),
+  projectController.archiveProject,
+);
+
 router.post(
   "/:organizationId/projects",
   authGuard,
   validateZodSchema(projectValidation.createProjectSchema),
   projectController.createProject,
+);
+
+router.post(
+  "/:organizationId/projects/:projectId/members",
+  authGuard,
+  validateZodSchema(projectValidation.addProjectMemberSchema),
+  projectController.addProjectMember,
+);
+
+router.delete(
+  "/:organizationId/projects/:projectId/members/:memberId",
+  authGuard,
+  validateZodSchema(projectValidation.removeProjectMemberSchema),
+  projectController.removeProjectMember,
 );
 
 export default router;

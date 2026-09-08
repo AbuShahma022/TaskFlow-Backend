@@ -14,3 +14,17 @@ export interface IGetProjectsQuery {
   search?: string;
   status?: "ACTIVE" | "ARCHIVED";
 }
+
+export interface IAddProjectMember {
+  userId: string;
+}
+
+export interface IGetProjectMembersQuery {
+  page?: number;
+  limit?: number;
+  search?: string;
+}
+
+export interface IRemoveProjectMember {
+  memberId: string;
+}

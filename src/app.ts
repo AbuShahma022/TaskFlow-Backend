@@ -26,7 +26,10 @@ const limiter = rateLimit({
 
 app.use(limiter);
 //here payment gateway
-
+app.use(
+  "/api/v1/payments/stripe/webhook",
+  express.raw({ type: "application/json" }),
+);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

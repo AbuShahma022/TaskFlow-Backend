@@ -11,6 +11,8 @@ import subtaskRoute from "../modules/subtask/subtask.route";
 import commentRoute from "../modules/comment/comment.route"
 import activityLog from "../modules/activityLog/activityLog.route"
 import subscriptionRoute from "../modules/subscription/subscription.route"
+import paymentRoute from "../modules/payment/payment.route"
+import paymentWebhookRoute from "../modules/payment/payment.route";
 
 interface IRoute {
 	path: string;
@@ -74,6 +76,15 @@ const allRoutes: IRoute[] = [
 {
   path:"/organizations",
   route: subscriptionRoute
+},
+
+{
+  path:"/organizations",
+  route: paymentRoute
+},
+{
+  path:"/payments",
+  route:paymentWebhookRoute
 }
 
 

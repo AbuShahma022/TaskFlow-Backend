@@ -88,7 +88,7 @@ const getOrganizationMembers = catchAsync(
 const updateOrganizationMemberRole = catchAsync(
   async (req: Request, res: Response) => {
     const result = await organizationService.updateOrganizationMemberRole(
-      req.user.id,
+      req.user!.id,
       req.params.id as string,
       req.params.memberId as string,
       req.body as IUpdateOrganizationMemberRole,
@@ -106,7 +106,7 @@ const updateOrganizationMemberRole = catchAsync(
 const removeOrganizationMember = catchAsync(
   async (req: Request, res: Response) => {
     await organizationService.removeOrganizationMember(
-      req.user.id,
+      req.user!.id,
       req.params.id as string,
       req.params.memberId as string,
     );

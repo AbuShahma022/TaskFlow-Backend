@@ -8,6 +8,7 @@ import projectRoute from "../modules/project/project.route";
 import sprintRoute from "../modules/sprint/sprint.route";
 import taskRoute from "../modules/task/task.route";
 import subtaskRoute from "../modules/subtask/subtask.route";
+import commentRoute from "../modules/comment/comment.route"
 
 interface IRoute {
 	path: string;
@@ -56,6 +57,11 @@ const allRoutes: IRoute[] = [
 {
   path:"/organizations",
   route: subtaskRoute
+},
+
+{
+  path:"/organizations",
+  route: commentRoute
 }
 
 

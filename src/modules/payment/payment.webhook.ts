@@ -27,7 +27,7 @@ try {
 
     
 if (event.type === "checkout.session.completed") {
-     console.log("CHECKOUT SESSION COMPLETED");
+     
   const session = event.data.object ;
 
   const paymentId = session.metadata?.paymentId;
@@ -42,7 +42,7 @@ if (event.type === "checkout.session.completed") {
   }
 
   if (session.payment_status === "paid") {
-      console.log("Starting payment transaction...");
+      
     await prisma.$transaction(async (tx) => {
       const payment = await tx.payment.findUnique({
         where: {
@@ -117,7 +117,7 @@ if (event.type === "checkout.session.completed") {
 
 );
   }
-   console.log("Payment transaction completed");
+  
 }
 
     

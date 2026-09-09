@@ -1,6 +1,7 @@
-import { prisma } from "../../../lib/prisma";
-import AppError from "../../../utils/AppError";
-import { IAddTeamMember, ICreateTeam, IGetTeamsQuery, IUpdateTeam } from "../team.interface";
+import { prisma } from "../../lib/prisma";
+import AppError from "../../utils/AppError";
+import { subscriptionService } from "../subscription/subscription.service";
+import { IAddTeamMember, ICreateTeam, IGetTeamsQuery, IUpdateTeam } from "./team.interface";
 import httpStatus from "http-status";
 
 
@@ -29,6 +30,8 @@ const createTeam = async (
       "Only organization managers can create teams",
     );
   }
+
+  await subscriptionService.checkTeamLimit(organizationId);
 
  const team = await prisma.$transaction(async (tx) => {
   const createdTeam = await tx.team.create({

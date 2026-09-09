@@ -2,6 +2,7 @@ import httpStatus from "http-status";
 import { prisma } from "../../lib/prisma";
 import  AppError  from "../../utils/AppError";
 import { IAssignTask, ICreateTask, IGetTasksQuery, IUpdateTask, IUpdateTaskStatus } from "./task.interface";
+import { subscriptionService } from "../subscription/subscription.service";
 
 const createTask = async (
   userId: string,
@@ -81,6 +82,8 @@ const createTask = async (
       );
     }
   }
+
+  await subscriptionService.checkTaskLimit(organizationId);
 
 const task = await prisma.$transaction(async (tx) => {
   const createdTask = await tx.task.create({

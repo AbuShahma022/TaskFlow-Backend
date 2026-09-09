@@ -1,9 +1,9 @@
 import { Request, Response } from "express";
 import httpStatus from "http-status";
 import { teamService } from "./team.service";
-import { IAddTeamMember, ICreateTeam, IGetTeamsQuery, IUpdateTeam } from "../team.interface";
-import catchAsync from "../../../utils/catchAsync";
-import sendResponse from "../../../utils/sendResponse";
+import { IAddTeamMember, ICreateTeam, IGetTeamsQuery, IUpdateTeam } from "./team.interface";
+import catchAsync from "../../utils/catchAsync";
+import sendResponse from "../../utils/sendResponse";
 
 
 const createTeam = catchAsync(async (req: Request, res: Response) => {

@@ -1,7 +1,7 @@
 import { Router } from "express";
-import authGuard from "../../../middleware/authGuard";
-import validateZodSchema from "../../../middleware/validateRequest";
-import { teamValidation } from "../team.validation";
+import authGuard from "../../middleware/authGuard";
+import validateZodSchema from "../../middleware/validateRequest";
+import { teamValidation } from "./team.validation";
 import { teamController } from "./team.controller";
 
 

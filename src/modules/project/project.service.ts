@@ -2,6 +2,7 @@ import httpStatus from "http-status";
 import AppError from "../../utils/AppError";
 import { prisma } from "../../lib/prisma";
 import { IAddProjectMember, ICreateProject, IGetProjectMembersQuery, IGetProjectsQuery, IUpdateProject } from "./project.interface";
+import { subscriptionService } from "../subscription/subscription.service";
 
 const createProject = async (
   userId: string,
@@ -28,6 +29,8 @@ const createProject = async (
       "Only organization managers can create projects",
     );
   }
+
+  await subscriptionService.checkProjectLimit(organizationId);
 
   const project = await prisma.$transaction(async (tx) => {
     const createdProject = await tx.project.create({

@@ -78,9 +78,18 @@ if (existingOrganization) {
       },
     });
 
+    const subscription = await tx.subscription.create({
+      data: {
+        organizationId: organization.id,
+        plan: "FREE",
+        status: "ACTIVE",
+      },
+    });
+
     return {
       organization,
       member,
+      subscription
     };
   },
     {

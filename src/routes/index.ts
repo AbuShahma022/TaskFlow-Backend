@@ -3,13 +3,14 @@ import authRoute from "../modules/auth/auth.route";
 import userRoute from "../modules/user/user.route";
 import organizationRoute from "../modules/organization/organization.route";
 import organizationInvitationRoute from "../modules/organization/organizationInvitation.route";
-import teamRoute from "../modules/team/team/team.route";
+import teamRoute from "../modules/team/team.route";
 import projectRoute from "../modules/project/project.route";
 import sprintRoute from "../modules/sprint/sprint.route";
 import taskRoute from "../modules/task/task.route";
 import subtaskRoute from "../modules/subtask/subtask.route";
 import commentRoute from "../modules/comment/comment.route"
 import activityLog from "../modules/activityLog/activityLog.route"
+import subscriptionRoute from "../modules/subscription/subscription.route"
 
 interface IRoute {
 	path: string;
@@ -68,6 +69,11 @@ const allRoutes: IRoute[] = [
 {
   path:"/organizations",
   route: activityLog
+},
+
+{
+  path:"/organizations",
+  route: subscriptionRoute
 }
 
 

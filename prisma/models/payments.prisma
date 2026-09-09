@@ -1,6 +1,6 @@
 model Payment {
   id                      String          @id @default(uuid())
-  organizationId          String
+  organizationId          String              @default(uuid())
   userId                  String
   amount                  Decimal         @db.Decimal(10, 2)
   currency                String          @default("USD")

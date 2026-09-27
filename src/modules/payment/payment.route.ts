@@ -27,4 +27,11 @@ router.post(
   handleStripeWebhook,
 );
 
+router.post(
+  "/verify/:organizationId",
+  authGuard,
+  validateZodSchema(paymentValidation.verifyPaymentSchema),
+  paymentController.verifyPayment,
+);
+
 export default router;

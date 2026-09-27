@@ -34,7 +34,29 @@ const getPayments = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const verifyPayment = catchAsync(
+  async (req: Request, res: Response) => {
+    const { sessionId } = req.body;
+
+    const userId = req.user!.id;
+    const organizationId = req.params.organizationId as string;
+
+    const result = await paymentService.verifyPayment(
+      userId,
+      organizationId,
+      sessionId,
+    );
+
+    res.status(httpStatus.OK).json({
+      success: true,
+      message: "Payment verified successfully",
+      data: result,
+    });
+  },
+);
+
 export const paymentController = {
   createPayment,
-  getPayments
+  getPayments,
+  verifyPayment
 };

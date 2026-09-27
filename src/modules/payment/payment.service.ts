@@ -3,6 +3,7 @@ import { prisma } from "../../lib/prisma";
 import AppError from "../../utils/AppError";
 import config from "../../config";
 import { stripe } from "../../lib/stripe";
+import { PaymentStatus } from "../../../generated/prisma/enums";
 
 
 
@@ -188,7 +189,68 @@ const getPayments = async (
   };
 };
 
+const verifyPayment = async (
+  userId: string,
+  organizationId: string,
+  sessionId: string,
+): Promise<{
+  paymentId: string;
+  sessionId: string;
+  paymentStatus: PaymentStatus;
+  stripePaymentStatus: string | null;
+  checkoutStatus: string | null;
+  amount: unknown;
+  currency: string;
+}> => {
+  const member = await prisma.organizationMember.findUnique({
+    where: {
+      organizationId_userId: {
+        organizationId,
+        userId,
+      },
+    },
+  });
+
+  if (!member) {
+    throw new AppError(
+      httpStatus.FORBIDDEN,
+      "You are not a member of this organization",
+    );
+  }
+
+
+
+  const payment = await prisma.payment.findFirst({
+    where: {
+      organizationId,
+      userId,
+      stripeCheckoutSessionId: sessionId,
+    },
+  });
+
+  if (!payment) {
+    throw new AppError(
+      httpStatus.NOT_FOUND,
+      "Payment not found",
+    );
+  }
+
+  const session = await stripe.checkout.sessions.retrieve(sessionId);
+
+  return {
+    paymentId: payment.id,
+    sessionId: session.id,
+    paymentStatus: payment.status,
+    stripePaymentStatus: session.payment_status,
+    checkoutStatus: session.status,
+    amount: payment.amount,
+    currency: payment.currency,
+  };
+};
+
 export const paymentService = {
   createPayment,
-  getPayments
+  getPayments,
+  verifyPayment
+  
 };

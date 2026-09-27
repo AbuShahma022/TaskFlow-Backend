@@ -22,7 +22,21 @@ const getPaymentsSchema = z.object({
   }),
 });
 
+const verifyPaymentSchema = z.object({
+  body: z.object({
+    sessionId: z
+      .string()
+      .min(1, "Stripe session ID is required"),
+  }),
+  params: z.object({
+    organizationId: z
+      .string()
+      .uuid("Invalid organization ID"),
+  }),
+});
+
 export const paymentValidation = {
   createPaymentSchema,
   getPaymentsSchema,
+  verifyPaymentSchema
 };

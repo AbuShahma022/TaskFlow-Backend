@@ -382,12 +382,11 @@ const updateTask = async (
 
   const isManager = organizationMember.role === "MANAGER";
   const isCreator = task.createdById === userId;
-  const isAssignee = task.assignedToId === userId;
 
-  if (!isManager && !isCreator && !isAssignee) {
+  if (!isManager && !isCreator) {
     throw new AppError(
       httpStatus.FORBIDDEN,
-      "You can only update tasks you created or are assigned to",
+      "Only managers can update tasks",
     );
   }
 

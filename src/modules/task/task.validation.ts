@@ -11,7 +11,6 @@ const createTaskSchema = z.object({
     description: z.string().trim().optional(),
     priority: z
       .enum(["LOW", "MEDIUM", "HIGH", "URGENT"], "Task priority is required",),
-    sprintId: z.string().uuid("Invalid sprint ID"),
     dueDate: z.string().datetime("Invalid due date").optional(),
   }),
 });

@@ -10,6 +10,7 @@ const createTask = catchAsync(async (req: Request, res: Response) => {
     req.user!.id,
     req.params.organizationId as string,
     req.params.projectId as string,
+    req.params.sprintId as string,
     req.body as ICreateTask,
   );
 
@@ -59,6 +60,7 @@ const updateTask = catchAsync(async (req: Request, res: Response) => {
     req.params.organizationId as string,
     req.params.projectId as string,
     req.params.taskId as string,
+      req.params.sprintId as string,
     req.body as IUpdateTask,
   );
 

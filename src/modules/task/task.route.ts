@@ -21,7 +21,7 @@ router.get(
 );
 
 router.patch(
-  "/:organizationId/projects/:projectId/tasks/:taskId",
+  "/:organizationId/projects/:projectId/sprints/:sprintId/tasks/:taskId",
   authGuard,
   validateZodSchema(taskValidation.updateTaskSchema),
   taskController.updateTask,
@@ -42,7 +42,7 @@ router.patch(
 );
 
 router.post(
-  "/:organizationId/projects/:projectId/tasks",
+  "/:organizationId/projects/:projectId/sprints/:sprintId/tasks",
   authGuard,
   validateZodSchema(taskValidation.createTaskSchema),
   taskController.createTask,

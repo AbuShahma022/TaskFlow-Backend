@@ -4,15 +4,14 @@ const createTaskSchema = z.object({
   params: z.object({
     organizationId: z.string().uuid("Invalid organization ID"),
     projectId: z.string().uuid("Invalid project ID"),
+     sprintId: z.string().uuid("Invalid sprint ID"),
   }),
   body: z.object({
     title: z.string().trim().min(2, "Task title is required"),
     description: z.string().trim().optional(),
     priority: z
-      .enum(["LOW", "MEDIUM", "HIGH", "URGENT"])
-      .optional(),
-    sprintId: z.string().uuid("Invalid sprint ID").optional(),
-    assignedToId: z.string().uuid("Invalid user ID").optional(),
+      .enum(["LOW", "MEDIUM", "HIGH", "URGENT"], "Task priority is required",),
+    sprintId: z.string().uuid("Invalid sprint ID"),
     dueDate: z.string().datetime("Invalid due date").optional(),
   }),
 });
@@ -50,6 +49,7 @@ const updateTaskSchema = z.object({
     organizationId: z.string().uuid("Invalid organization ID"),
     projectId: z.string().uuid("Invalid project ID"),
     taskId: z.string().uuid("Invalid task ID"),
+    sprintId: z.string().uuid("Invalid sprint ID"),
   }),
   body: z.object({
     title: z.string().trim().min(2).optional(),
@@ -57,7 +57,6 @@ const updateTaskSchema = z.object({
     priority: z
       .enum(["LOW", "MEDIUM", "HIGH", "URGENT"])
       .optional(),
-    sprintId: z.string().uuid("Invalid sprint ID").nullable().optional(),
     assignedToId: z.string().uuid("Invalid user ID").nullable().optional(),
     dueDate: z.string().datetime("Invalid due date").nullable().optional(),
   }),

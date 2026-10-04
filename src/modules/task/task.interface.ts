@@ -1,9 +1,7 @@
 export interface ICreateTask {
   title: string;
   description?: string;
-  priority?: "LOW" | "MEDIUM" | "HIGH" | "URGENT";
-  sprintId?: string;
-  assignedToId?: string;
+  priority: "LOW" | "MEDIUM" | "HIGH" | "URGENT";
   dueDate?: string;
 }
 
@@ -11,7 +9,6 @@ export interface IUpdateTask {
   title?: string;
   description?: string;
   priority?: "LOW" | "MEDIUM" | "HIGH" | "URGENT";
-  sprintId?: string | null;
   assignedToId?: string | null;
   dueDate?: string | null;
 }

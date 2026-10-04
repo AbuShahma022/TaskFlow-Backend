@@ -8,6 +8,7 @@ const createTask = async (
   userId: string,
   organizationId: string,
   projectId: string,
+   sprintId: string,
   payload: ICreateTask,
 ) => {
   const organizationMember = await prisma.organizationMember.findFirst({
@@ -43,45 +44,32 @@ const createTask = async (
     );
   }
 
-  if (payload.sprintId) {
-    const sprint = await prisma.sprint.findFirst({
-      where: {
-        id: payload.sprintId,
-        projectId,
-        deletedAt: null,
-      },
-    });
+ const sprint = await prisma.sprint.findFirst({
+  where: {
+    id: sprintId,
+    projectId,
+    deletedAt: null,
+  },
+});
 
-    if (!sprint) {
-      throw new AppError(
-        httpStatus.BAD_REQUEST,
-        "Sprint does not belong to this project",
-      );
-    }
+if (!sprint) {
+  throw new AppError(
+    httpStatus.BAD_REQUEST,
+    "Sprint does not belong to this project",
+  );
+}
 
-    if (sprint.status === "COMPLETED" || sprint.status === "ARCHIVED") {
-      throw new AppError(
-        httpStatus.BAD_REQUEST,
-        "Cannot add a task to a completed or archived sprint",
-      );
-    }
-  }
+if (
+  sprint.status === "COMPLETED" ||
+  sprint.status === "ARCHIVED"
+) {
+  throw new AppError(
+    httpStatus.BAD_REQUEST,
+    "Cannot add a task to a completed or archived sprint",
+  );
+}
 
-  if (payload.assignedToId) {
-    const projectMember = await prisma.projectMember.findFirst({
-      where: {
-        projectId,
-        userId: payload.assignedToId,
-      },
-    });
-
-    if (!projectMember) {
-      throw new AppError(
-        httpStatus.BAD_REQUEST,
-        "Assigned user is not a member of this project",
-      );
-    }
-  }
+ 
 
   await subscriptionService.checkTaskLimit(organizationId);
 
@@ -89,11 +77,10 @@ const task = await prisma.$transaction(async (tx) => {
   const createdTask = await tx.task.create({
     data: {
       projectId,
-      sprintId: payload.sprintId,
+      sprintId,
       title: payload.title,
       description: payload.description,
-      priority: payload.priority ?? "MEDIUM",
-      assignedToId: payload.assignedToId,
+      priority: payload.priority ,
       dueDate: payload.dueDate ? new Date(payload.dueDate) : undefined,
       createdById: userId,
     },
@@ -110,7 +97,6 @@ const task = await prisma.$transaction(async (tx) => {
       metadata: {
         projectId,
         sprintId: createdTask.sprintId,
-        assignedToId: createdTask.assignedToId,
         priority: createdTask.priority,
       },
     },
@@ -353,6 +339,7 @@ const updateTask = async (
   organizationId: string,
   projectId: string,
   taskId: string,
+  sprintId: string,
   payload: IUpdateTask,
 ) => {
   const organizationMember = await prisma.organizationMember.findFirst({
@@ -373,6 +360,7 @@ const updateTask = async (
     where: {
       id: taskId,
       projectId,
+      sprintId,
       deletedAt: null,
       project: {
         organizationId,
@@ -426,29 +414,27 @@ const updateTask = async (
     }
   }
 
-  if (payload.sprintId) {
-    const sprint = await prisma.sprint.findFirst({
-      where: {
-        id: payload.sprintId,
-        projectId,
-        deletedAt: null,
-      },
-    });
+const sprint = await prisma.sprint.findFirst({
+  where: {
+    id: sprintId,
+    projectId,
+    deletedAt: null,
+  },
+});
 
-    if (!sprint) {
-      throw new AppError(
-        httpStatus.BAD_REQUEST,
-        "Sprint does not belong to this project",
-      );
-    }
+if (!sprint) {
+  throw new AppError(
+    httpStatus.BAD_REQUEST,
+    "Sprint does not belong to this project",
+  );
+}
 
-    if (sprint.status === "COMPLETED" || sprint.status === "ARCHIVED") {
-      throw new AppError(
-        httpStatus.BAD_REQUEST,
-        "Cannot assign a task to a completed or archived sprint",
-      );
-    }
-  }
+if (sprint.status === "COMPLETED" || sprint.status === "ARCHIVED") {
+  throw new AppError(
+    httpStatus.BAD_REQUEST,
+    "Cannot update a task in a completed or archived sprint",
+  );
+}
 
 const updatedTask = await prisma.$transaction(async (tx) => {
   const updated = await tx.task.update({
@@ -459,7 +445,6 @@ const updatedTask = await prisma.$transaction(async (tx) => {
       title: payload.title,
       description: payload.description,
       priority: payload.priority,
-      sprintId: payload.sprintId,
       assignedToId: payload.assignedToId,
       dueDate:
         payload.dueDate !== undefined

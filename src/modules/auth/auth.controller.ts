@@ -51,11 +51,12 @@ const login = catchAsync(async (req: Request, res: Response) => {
 
 
 const getMe = catchAsync(async (req: Request, res: Response) => {
+    const user = await authService.getMe(req.user!.id as string);
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
     message: "User information retrieved successfully",
-    data: req.user,
+    data: user,
   });
 });
 

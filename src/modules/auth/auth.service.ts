@@ -643,8 +643,49 @@ const googleLogin = async (idToken: string) => {
   };
 };
 
+
+const getMe = async (userId: string) => {
+  const user = await prisma.user.findUnique({
+    where: {
+      id: userId,
+    },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      avatar: true,
+      role: true,
+      emailVerified: true,
+      status: true,
+      googleId: true,
+      createdAt: true,
+      updatedAt: true,
+      deletedAt: true,
+    },
+  });
+
+  if (!user) {
+    throw new AppError(
+      httpStatus.NOT_FOUND,
+      "User not found"
+    );
+  }
+
+  if (user.deletedAt) {
+    throw new AppError(
+      httpStatus.UNAUTHORIZED,
+      "User account has been deleted"
+    );
+  }
+
+  return user;
+};
+
+
+
 export const authService = {
   register,
+  getMe,
   login,
   refreshToken,
   sendVerificationOTP,

@@ -16,6 +16,12 @@ https://taskflow-backend-xviv.onrender.com
 
 https://taskflow-backend-xviv.onrender.com/api/v1
 
+### Frontend live
+https://task-flowmanage.vercel.app
+
+### Frontend Repo
+https://github.com/AbuShahma022/TaskFlow-frontend
+
 ### Health Check
 
 GET /
